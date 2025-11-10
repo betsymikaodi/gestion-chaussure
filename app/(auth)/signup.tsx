@@ -8,6 +8,7 @@ import {
   ScrollView,
   TouchableOpacity,
   Alert,
+  Switch,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Formik } from 'formik';
@@ -15,7 +16,7 @@ import * as Yup from 'yup';
 import { Input } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
 import { useAuth } from '@/contexts/AuthContext';
-import { Mail, Lock, User } from 'lucide-react-native';
+import { Mail, Lock, User, Shield } from 'lucide-react-native';
 
 const signupSchema = Yup.object().shape({
   fullName: Yup.string().required('Full name is required'),
@@ -37,10 +38,11 @@ export default function SignupScreen() {
     fullName: string;
     email: string;
     password: string;
+    isAdmin: boolean;
   }) => {
     try {
       setLoading(true);
-      const { error } = await signUp(values.email, values.password, values.fullName);
+      const { error } = await signUp(values.email, values.password, values.fullName, values.isAdmin);
       
       if (error) {
         // Si l'erreur indique que l'email doit être confirmé
@@ -89,6 +91,7 @@ export default function SignupScreen() {
             email: '',
             password: '',
             confirmPassword: '',
+            isAdmin: false,
           }}
           validationSchema={signupSchema}
           onSubmit={handleSignup}
@@ -162,6 +165,27 @@ export default function SignupScreen() {
                 containerStyle={styles.inputSpacing}
               />
 
+              <View style={styles.adminToggle}>
+                <View style={styles.adminToggleLeft}>
+                  <Shield size={20} color={values.isAdmin ? '#007AFF' : '#8E8E93'} />
+                  <View style={styles.adminToggleText}>
+                    <Text style={styles.adminToggleTitle}>Admin Account</Text>
+                    <Text style={styles.adminToggleSubtitle}>
+                      {values.isAdmin ? 'Full access to manage products and orders' : 'Standard user account'}
+                    </Text>
+                  </View>
+                </View>
+                <Switch
+                  value={values.isAdmin}
+                  onValueChange={(value) => {
+                    handleChange('isAdmin')(value.toString());
+                    values.isAdmin = value;
+                  }}
+                  trackColor={{ false: '#E5E5EA', true: '#007AFF' }}
+                  thumbColor="#FFFFFF"
+                />
+              </View>
+
               <Button
                 title="Sign Up"
                 onPress={handleSubmit as any}
@@ -228,5 +252,35 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#007AFF',
     fontWeight: '600',
+  },
+  adminToggle: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: '#F9F9F9',
+    borderRadius: 12,
+    padding: 16,
+    marginTop: 16,
+    borderWidth: 1,
+    borderColor: '#E5E5EA',
+  },
+  adminToggleLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+    gap: 12,
+  },
+  adminToggleText: {
+    flex: 1,
+  },
+  adminToggleTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#000000',
+    marginBottom: 4,
+  },
+  adminToggleSubtitle: {
+    fontSize: 13,
+    color: '#8E8E93',
   },
 });

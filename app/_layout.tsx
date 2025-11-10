@@ -23,7 +23,6 @@ export default function RootLayout() {
           <Stack.Screen name="product/[id]" />
           <Stack.Screen name="order/[id]" />
           <Stack.Screen name="checkout" />
-          <Stack.Screen name="admin" />
         </Stack>
         <StatusBar style="auto" />
       </AuthProvider>

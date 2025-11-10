@@ -14,7 +14,7 @@ interface AuthContextType {
   loading: boolean;
   isAuthenticated: boolean;
   isAdmin: boolean;
-  signUp: (email: string, password: string, fullName: string) => Promise<AuthResponse>;
+  signUp: (email: string, password: string, fullName: string, isAdmin?: boolean) => Promise<AuthResponse>;
   signIn: (email: string, password: string) => Promise<AuthResponse>;
   signOut: () => Promise<AuthResponse>;
   resetPassword: (email: string) => Promise<AuthResponse>;
@@ -38,10 +38,29 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         .from('profiles')
         .select('*')
         .eq('id', userId)
-        .single();
+        .maybeSingle();
 
       if (error) throw error;
-      
+
+      if (!data) {
+        const { data: userResp } = await supabase.auth.getUser();
+        const u = userResp?.user;
+        if (!u) {
+          setProfile(null);
+          return null;
+        }
+
+        const created = await createUserProfile({
+          id: u.id,
+          email: u.email!,
+          full_name: (u.user_metadata as any)?.full_name ?? '',
+          phone: null,
+          is_admin: (u.user_metadata as any)?.is_admin ?? false,
+        });
+        setProfile(created);
+        return created;
+      }
+
       setProfile(data);
       return data;
     } catch (error) {
@@ -86,7 +105,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const signUp = async (email: string, password: string, fullName: string): Promise<AuthResponse> => {
+  const signUp = async (email: string, password: string, fullName: string, isAdmin: boolean = false): Promise<AuthResponse> => {
     try {
       setLoading(true);
       const { data, error } = await supabase.auth.signUp({
@@ -96,6 +115,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           emailRedirectTo: undefined,
           data: {
             full_name: fullName,
+            is_admin: isAdmin,
           }
         }
       });
@@ -112,7 +132,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             email: data.user.email!,
             full_name: fullName,
             phone: null,
-            is_admin: false
+            is_admin: isAdmin
           });
           
           // Si l'email doit être confirmé, on ne connecte pas automatiquement
