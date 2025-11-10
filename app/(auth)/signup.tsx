@@ -40,14 +40,30 @@ export default function SignupScreen() {
   }) => {
     try {
       setLoading(true);
-      await signUp(values.email, values.password, values.fullName);
+      const { error } = await signUp(values.email, values.password, values.fullName);
+      
+      if (error) {
+        // Si l'erreur indique que l'email doit être confirmé
+        if (error.message.includes('check your email')) {
+          Alert.alert(
+            'Confirmation Required',
+            'Please check your email to confirm your account before signing in.',
+            [{ text: 'OK', onPress: () => router.replace('/(auth)/login') }]
+          );
+        } else {
+          Alert.alert('Error', error.message || 'Signup failed. Please try again.');
+        }
+        return;
+      }
+      
+      // Si pas d'erreur, l'utilisateur est connecté automatiquement
       Alert.alert(
         'Success',
-        'Account created successfully! Please sign in.',
-        [{ text: 'OK', onPress: () => router.replace('/(auth)/login') }]
+        'Account created successfully! You are now logged in.',
+        [{ text: 'OK', onPress: () => router.replace('/(tabs)') }]
       );
     } catch (error: any) {
-      Alert.alert('Error', error.message || 'Signup failed. Please try again.');
+      Alert.alert('Error', error.message || 'An unexpected error occurred.');
     } finally {
       setLoading(false);
     }

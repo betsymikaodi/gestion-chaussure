@@ -15,6 +15,7 @@ export function useProducts(filters: ProductFilters = {}) {
   return useQuery({
     queryKey: ['products', filters],
     queryFn: async () => {
+      console.log('🔍 Fetching products with filters:', filters);
       let query = supabase.from('products').select('*');
 
       if (filters.search) {
@@ -47,7 +48,12 @@ export function useProducts(filters: ProductFilters = {}) {
         ascending: false,
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error('❌ Error fetching products:', error);
+        throw error;
+      }
+      
+      console.log('✅ Products fetched:', data?.length || 0);
       return data as Product[];
     },
   });
@@ -64,7 +70,7 @@ export function useProduct(id: string) {
         .maybeSingle();
 
       if (error) throw error;
-      return data as Product;
+      return data as Product | null;
     },
     enabled: !!id,
   });

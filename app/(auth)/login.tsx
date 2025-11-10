@@ -32,10 +32,16 @@ export default function LoginScreen() {
   const handleLogin = async (values: { email: string; password: string }) => {
     try {
       setLoading(true);
-      await signIn(values.email, values.password);
+      const { error } = await signIn(values.email, values.password);
+      
+      if (error) {
+        Alert.alert('Error', error.message || 'Login failed. Please try again.');
+        return;
+      }
+      
       router.replace('/(tabs)');
     } catch (error: any) {
-      Alert.alert('Error', error.message || 'Login failed. Please try again.');
+      Alert.alert('Error', error.message || 'An unexpected error occurred.');
     } finally {
       setLoading(false);
     }
